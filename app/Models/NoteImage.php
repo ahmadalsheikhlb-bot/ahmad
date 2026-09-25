@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\HasFile;
 
 class NoteImage extends Model
 {
     use HasFactory;
+   use HasFile;
 
     protected $fillable = [
         'note_id',

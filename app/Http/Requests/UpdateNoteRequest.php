@@ -2,13 +2,10 @@
 
 namespace App\Http\Requests;
 
-use App\Enum\NoteStatus;
-use App\Enum\NoteVisibility;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class CreateNoteRequest extends FormRequest
+class UpdateNoteRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,18 +22,16 @@ class CreateNoteRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+            return [
             
     'user_id'      => ['required', 'exists:users,id'],
     'topic_id'     => ['required', 'exists:topics,id'],
     'title'        => ['required', 'string', 'max:255'],
     'content'      => ['required', 'string'],
-    'visibility'   => [Rule::enum(NoteVisibility::class)], 
-    'status'       => [Rule::enum(NoteStatus::class)], 
+    'visibility'   => ['nullable', 'string', 'in:public,private,shared'], 
+    'status'       => ['nullable', 'string', 'in:draft,published,archived'], 
     'published_at' => ['nullable', 'date'],
     'archived_at'  => ['nullable', 'date', 'after_or_equal:published_at'],
-    'images'=> ['required','array'],
-    'images.*'=> ['image','mimes:jpeg,png,jpg', 'max:2048'],
 
         ];
     }

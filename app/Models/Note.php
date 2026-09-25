@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enum\NoteStatus;
+use App\Enum\NoteVisibility;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,6 +27,8 @@ class Note extends Model
         return [
             'published_at' => 'datetime',
             'archived_at' => 'datetime',
+            'status'=> NoteStatus::class,
+            'visibility'=> NoteVisibility::class,
         ];
     }
 

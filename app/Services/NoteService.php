@@ -2,60 +2,68 @@
 
 namespace App\Services;
 
+use App\HasFile;
+use App\Http\Requests\UpdateNoteRequest;
 use App\Models\Note;
+use App\Models\NoteImage;
+use Illuminate\Http\UploadedFile;
+//use App\Models\User;
 use Illuminate\Support\Facades\DB;
-
+use App\Http\Requests\CreateNoteRequest;
+use Illuminate\Support\Facades\Auth;
 /**
  * Class NoteService.
  */
 class NoteService
 {
-public function createNote(array $request): Note
+    use HasFile;
+
+    public function createNote(CreateNoteRequest $request): Note
     {
         // Implement the logic to create a note using the provided data
         // For example, you can use Eloquent to create a new Note model instance
         // and save it to the database.
-
-        return DB::transaction(function () use ($request) {
-            $note = new Note();
-            $note->user_id = $request['user_id'];
-            $note->topic_id = $request['topic_id'];
-            $note->title = $request['title'];
-            $note->content = $request['content'];
-            $note->visibility = $request['visibility'] ?? 'private'; // Default to private if not provided
-            $note->status = $request['status'] ?? 'draft'; // Default to draft if not provided
-            $note->published_at = $request['published_at'] ?? null;
-            $note->archived_at = $request['archived_at'] ?? null;
-            $note->save();
-
+        $this->Storefiles($request->file('images'), 'note_images');
+        return DB::transaction(function () use ( $request) {
+            $data = $request->validated();
+            $note = Note::create($data);
             return $note;
+          
         });
    
     }
 
-    public function getmynote(int $userId): \Illuminate\Database\Eloquent\Collection
+    //user retrives their own notes
+    public function getmynote(int $noteId): Note
     {
-        return Note::where('user_id', $userId)->get();
+       $note=Note::where('id',$noteId)
+       ->where('user_id',auth()->id())
+       ->firstOrFail();
+       return $note;
     }
 
     public function getNoteById(int $noteId): ?Note
     {
-        return Note::find($noteId);
+         $note=Note::where('id',$noteId)->first();
+         return $note;
     }
     public function RetrieveNotePublic(int $noteId): ?Note
     {
-        return Note::where('id', $noteId)
+       $note=Note::where('id', $noteId)
             ->where('visibility', 'public')
             ->first();
+            return $note;
     }
 
     public function getAllPublicNotes(): \Illuminate\Database\Eloquent\Collection
     {
-        return Note::where('visibility', 'public')->get();
+        $note= Note::where('visibility', 'public')->get();
+        return $note;
     }
     
-    public function UpdatesNote(int $noteId, int $userId, array $data): ?Note
+    public function UpdatesNote(int $noteId, int $userId, UpdateNoteRequest $request): ?Note
     {
+        $data=$request->validated();
         $note = Note::where('id', $noteId)
             ->where('user_id', $userId)
             ->first();
@@ -68,13 +76,33 @@ public function createNote(array $request): Note
         return $note;
     }
 
-    public function deleteNote(int $noteId, int $userId): bool
+    public function deleteNote(int $noteId): bool
     {
         $note = Note::where('id', $noteId)
-            ->where('user_id', $userId)
+            ->where('user_id', auth()->user()->id)
             ->first();
 
         $note->delete();
+        return true;
+    }
+
+    public function DeleteImage(string $path): bool
+    {
+       $this->DeleteFiles($path);
+         return true; 
+    }
+
+    public function ReplaceImage(string $oldpath, CreateNoteRequest $request, string $Foldername)
+    {
+        $newfile = $request->file('images');
+        $this->ReplaceFiles($oldpath, $newfile, $Foldername);
+        return true;    
+    }
+
+    public function AddImage(CreateNoteRequest $request, string $Foldername)
+    {
+        $file = $request->file('images');
+        $this->StoreFiles($file, $Foldername);
         return true;
     }
 }

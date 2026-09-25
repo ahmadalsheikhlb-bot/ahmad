@@ -15,6 +15,9 @@ class NoteOwnershipMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+            if(auth()->user()->role('user')){
+                throw new \Exception("Error Processing Request", 400); 
+            }
         return $next($request);
     }
 }
